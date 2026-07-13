@@ -15,7 +15,7 @@ const timeline = [
   {
     year: "Week 1",
     emoji: "📦",
-    title: "Six Chicks Arrive",
+    title: "Thirteen Chicks Arrive",
     desc: "They came in a box. A cardboard box. We were not prepared. We put them in a tote in the living room for two weeks.",
   },
   {
@@ -45,7 +45,7 @@ const faqs = [
   },
   {
     q: "Do you actually know what you're doing?",
-    a: "Marginally more than when we started. We've kept six chickens alive for over a year, which we consider a major personal achievement.",
+    a: "Marginally more than when we started. We've kept an ever growing number of chickens alive for over a year, which we consider a major personal achievement.",
   },
   {
     q: "Why are your eggs unwashed?",
@@ -87,7 +87,7 @@ const values = [
 export default function About() {
   useSEO({
     title: "Our Story",
-    description: "Meet the two best friends behind Eggsistential Farms — a backyard co-op raising chickens, baking bread, and figuring it out as they go.",
+    description: "Meet the friends behind Eggsistential Farms — a backyard co-op raising chickens, baking bread, and figuring it out as they go.",
     path: "/about",
   });
   return (
