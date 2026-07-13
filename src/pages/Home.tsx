@@ -10,7 +10,7 @@ import { PickupInfo } from "@/components/PickupInfo";
 import { useSEO } from "@/lib/seo";
 
 const stats = [
-  { value: "6", label: "Backyard Hens", icon: "🐔" },
+  { value: "23", label: "Backyard Hens", icon: "🐔" },
   { value: "2", label: "Best Friends", icon: "🤝" },
   { value: "~7 Dozen", label: "Eggs a Month", icon: "🥚" },
   { value: "1", label: "Coop (Mostly Upright)", icon: "🏚️" },
