@@ -114,7 +114,7 @@ export default function EggReorder() {
             Egg Re-order Hotline
           </h1>
           <p className="text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed mb-6">
-            Fresh, pasture-raised eggs from our six very opinionated backyard hens. Available in a beautiful mix of brown, green, and pink.
+            Fresh, pasture-raised eggs from our very opinionated backyard hens. Available in a beautiful mix of brown, green, and pink.
           </p>
 
           <div className="flex flex-col items-center gap-2 mb-8">
