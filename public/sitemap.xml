@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  This lists your main pages so Google knows they exist. Individual
+  blog posts aren't auto-added here (this is a plain file, not a
+  database) — when you add a real blog post in src/data/blogPosts.ts,
+  also add a <url> entry for it below, following the pattern under
+  "blog posts" near the bottom. It's optional (Google can still find
+  posts by following links from your Blog page) but it helps.
+-->
+<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.eggsistentialfarms.com/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.eggsistentialfarms.com/shop</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.eggsistentialfarms.com/eggs</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.eggsistentialfarms.com/bread</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.eggsistentialfarms.com/about</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.eggsistentialfarms.com/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.eggsistentialfarms.com/contact</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- blog posts: add one <url> block per real post, e.g.
+  <url>
+    <loc>https://www.eggsistentialfarms.com/blog/your-post-slug</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  -->
+</urlset>

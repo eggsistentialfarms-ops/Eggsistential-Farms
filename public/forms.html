@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<!--
+  This page is never shown to visitors. Netlify scans it when your
+  site deploys to register the forms below, so that the real forms
+  in the React app (which submit via JavaScript) are able to receive
+  entries. Don't delete this file, and if you ever add a new form
+  field to a page, add the matching field here too.
+-->
+<html>
+  <body>
+    <form name="newsletter" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="email" name="email" />
+    </form>
+
+    <form name="contact" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="text" name="name" />
+      <input type="email" name="email" />
+      <input type="text" name="subject" />
+      <textarea name="message"></textarea>
+    </form>
+
+    <form name="egg-order" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="text" name="firstName" />
+      <input type="text" name="lastName" />
+      <input type="email" name="email" />
+      <input type="text" name="phone" />
+      <input type="text" name="preferredDate" />
+      <input type="text" name="pickupLocation" />
+      <textarea name="message"></textarea>
+    </form>
+
+    <form name="bread-order" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="text" name="firstName" />
+      <input type="text" name="lastName" />
+      <input type="email" name="email" />
+      <input type="text" name="phone" />
+      <input type="text" name="breadType" />
+      <input type="text" name="quantity" />
+      <input type="text" name="preferredDate" />
+      <input type="text" name="pickupLocation" />
+      <textarea name="message"></textarea>
+    </form>
+  </body>
+</html>

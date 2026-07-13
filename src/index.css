@@ -1,0 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=DM+Sans:opsz,wght@9..40,400;500;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Modern Farmhouse Palette */
+  
+  /* Cream / Off-White Background */
+  --background: 40 16% 96%;
+  --foreground: 28 15% 25%; /* Deep earthy brown/grey */
+
+  /* Sage Green - Primary */
+  --primary: 150 12% 45%; 
+  --primary-foreground: 40 20% 97%;
+
+  /* Deep Earthy Brown - Secondary */
+  --secondary: 30 15% 88%; /* Light warm beige */
+  --secondary-foreground: 28 15% 25%;
+
+  /* Rust / Terracotta - Accent */
+  --accent: 15 55% 55%;
+  --accent-foreground: 40 20% 97%;
+
+  /* Muted tones */
+  --muted: 35 15% 90%;
+  --muted-foreground: 28 10% 45%;
+
+  /* Destructive */
+  --destructive: 0 60% 50%;
+  --destructive-foreground: 0 0% 98%;
+
+  /* Borders & Inputs */
+  --border: 30 10% 85%;
+  --input: 30 10% 85%;
+  --ring: 150 12% 45%;
+
+  /* Cards — solid, slightly lighter than the page background */
+  --card: 40 20% 99%;
+  --card-foreground: 28 15% 25%;
+  --card-border: 30 10% 85%;
+
+  /* Popovers / dropdown menus — must be solid so menu text stays readable */
+  --popover: 40 20% 99%;
+  --popover-foreground: 28 15% 25%;
+  --popover-border: 30 10% 85%;
+
+  /* Sidebar (used by a couple of UI primitives even though this site
+     doesn't have a visible sidebar) */
+  --sidebar: 40 16% 96%;
+  --sidebar-foreground: 28 15% 25%;
+  --sidebar-primary: 150 12% 45%;
+  --sidebar-primary-foreground: 40 20% 97%;
+  --sidebar-accent: 30 15% 88%;
+  --sidebar-accent-foreground: 28 15% 25%;
+  --sidebar-border: 30 10% 85%;
+  --sidebar-ring: 150 12% 45%;
+
+  /* Chart colors (used by the recharts library if any chart appears) */
+  --chart-1: 150 12% 45%;
+  --chart-2: 15 55% 55%;
+  --chart-3: 30 15% 88%;
+  --chart-4: 35 15% 90%;
+  --chart-5: 28 15% 25%;
+
+  --radius: 0.75rem;
+
+  /* Font Variables for CSS direct usage if needed */
+  --font-serif: 'Lora', serif;
+  --font-sans: 'DM Sans', sans-serif;
+  --font-display: 'Architects Daughter', cursive;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-accent/20 selection:text-accent-foreground;
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif);
+    @apply font-bold tracking-tight text-foreground/90;
+  }
+
+  .font-display {
+    font-family: var(--font-display);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Custom Animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}

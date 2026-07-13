@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+# Since this is a single-page app, any URL that isn't a real file
+# (like /blog/some-post) should still load index.html so React Router
+# (wouter) can take over and show the right page.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

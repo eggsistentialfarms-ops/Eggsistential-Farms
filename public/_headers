@@ -1,0 +1,13 @@
+# Site-wide password gate, free on any Netlify plan (the fancier
+# dashboard "password protect" toggle requires a paid plan — this
+# does the same job for free).
+#
+# CHANGE "farmpreview" and "changeme123" below to your own username
+# and password before you share this link with anyone. Every visitor
+# will see a plain browser login prompt asking for them.
+#
+# Once you're ready to actually launch the site publicly, delete
+# this file entirely (or just the two lines below) and redeploy.
+
+/*
+  Basic-Auth: farmpreview:changeme123

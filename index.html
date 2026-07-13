@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <!-- Fallback title/description — every page overrides these via
+         the useSEO hook (src/lib/seo.ts) once it loads, but these
+         matter for the very first moment a crawler or link-preview
+         bot sees the page before JavaScript runs. -->
+    <title>Eggsistential Farms — Fresh Eggs, Bread, Honey & Farm Merch</title>
+    <meta name="description" content="Eggsistential Farms is a backyard co-op selling pasture-raised eggs, hand-baked bread, raw honey (coming soon), and farm merch. Local pickup or shipping." />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Once you connect Google Search Console (search.google.com/search-console),
+         it will give you a line like the one below to paste in here to verify
+         ownership of your site. Leave commented out until then. -->
+    <!-- <meta name="google-site-verification" content="PASTE_YOUR_CODE_HERE" /> -->
+
+    <!-- Structured data: tells Google this is a local food business.
+         Update the phone/email/social links below to your real ones.
+         See README.md for notes on adding a street address here. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": ["Store", "LocalBusiness"],
+        "name": "Eggsistential Farms",
+        "description": "A backyard co-op selling pasture-raised eggs, hand-baked bread, raw honey, and farm merch.",
+        "url": "https://www.eggsistentialfarms.com",
+        "logo": "https://www.eggsistentialfarms.com/logo.png",
+        "image": "https://www.eggsistentialfarms.com/logo.png",
+        "email": "hello@eggsistentialfarms.com",
+        "priceRange": "$"
+      }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Fira+Code:wght@300..700&family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400..700;1,400..700&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Outfit:wght@100..900&family=Oxanium:wght@200..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100..900;1,100..900&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&family=Space+Grotesk:wght@300..700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
