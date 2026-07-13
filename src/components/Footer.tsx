@@ -16,7 +16,7 @@ export function Footer() {
             <span className="font-serif text-lg font-bold leading-tight">Eggsistential<br />Farms</span>
           </div>
           <p className="text-white/60 text-sm leading-relaxed max-w-xs">
-            Two best friends. Six opinionated chickens. A backyard co-op built on stubbornness and absolutely no prior experience.
+            Two friends. Twenty-three opinionated chickens. A backyard co-op built on stubbornness and absolutely no prior experience.
           </p>
           <div className="flex gap-3 pt-2">
             <a
