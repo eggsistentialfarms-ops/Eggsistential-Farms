@@ -1,6 +1,3 @@
-
-
-
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
