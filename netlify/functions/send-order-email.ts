@@ -7,9 +7,11 @@ type OrderData = {
   customerName?: string;
   customerEmail?: string;
   customerPhone?: string;
+  preferredDate?: string;
   pickupDate?: string;
+  pickupLocation?: string;
   notes?: string;
-  website?: string; // Honeypot field
+  website?: string;
   [key: string]: unknown;
 };
 
@@ -46,61 +48,89 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function jsonResponse(
+  status: number,
+  body: {
+    success: boolean;
+    message: string;
+    errorCode?: string;
+  }
+): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+}
+
 export default async (request: Request): Promise<Response> => {
-  const headers = {
-    "Content-Type": "application/json",
-  };
+  console.log("send-order-email function started");
+  console.log("Request method:", request.method);
 
   if (request.method !== "POST") {
-    return new Response(
-      JSON.stringify({
-        success: false,
-        message: "Method not allowed.",
-      }),
-      {
-        status: 405,
-        headers,
-      }
-    );
+    return jsonResponse(405, {
+      success: false,
+      message: "Method not allowed.",
+      errorCode: "METHOD_NOT_ALLOWED",
+    });
   }
 
   try {
-    const gmailUser = process.env.GMAIL_USER;
-    const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
+    const gmailUser = process.env.GMAIL_USER?.trim();
+    const gmailAppPassword =
+      process.env.GMAIL_APP_PASSWORD?.replace(/\s/g, "");
+
+    console.log("GMAIL_USER configured:", Boolean(gmailUser));
+    console.log(
+      "GMAIL_APP_PASSWORD configured:",
+      Boolean(gmailAppPassword)
+    );
 
     if (!gmailUser || !gmailAppPassword) {
-      console.error("Gmail environment variables are missing.");
-
-      return new Response(
-        JSON.stringify({
-          success: false,
-          message: "Email service is not configured.",
-        }),
-        {
-          status: 500,
-          headers,
-        }
+      console.error(
+        "Missing GMAIL_USER or GMAIL_APP_PASSWORD environment variable."
       );
+
+      return jsonResponse(500, {
+        success: false,
+        message:
+          "The website email service has not been configured correctly.",
+        errorCode: "MISSING_EMAIL_CONFIGURATION",
+      });
     }
 
-    const order: OrderData = await request.json();
+    let order: OrderData;
+
+    try {
+      order = (await request.json()) as OrderData;
+    } catch (error) {
+      console.error("Could not parse request JSON:", error);
+
+      return jsonResponse(400, {
+        success: false,
+        message: "The submitted order data was invalid.",
+        errorCode: "INVALID_JSON",
+      });
+    }
+
+    console.log("Order received:", {
+      orderType: order.orderType,
+      customerName: order.customerName,
+      customerEmail: order.customerEmail,
+    });
 
     /*
-     * Basic spam protection.
-     * Add a hidden field named "website" to each form.
-     * Real customers leave it blank; many bots fill it in.
+     * Honeypot spam field.
+     * A legitimate user should never fill in "website".
      */
     if (order.website) {
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: "Order received.",
-        }),
-        {
-          status: 200,
-          headers,
-        }
-      );
+      console.warn("Honeypot field was completed. Ignoring submission.");
+
+      return jsonResponse(200, {
+        success: true,
+        message: "Order received.",
+      });
     }
 
     const orderType =
@@ -109,7 +139,8 @@ export default async (request: Request): Promise<Response> => {
         : "Farm";
 
     const customerName =
-      typeof order.customerName === "string" && order.customerName.trim()
+      typeof order.customerName === "string" &&
+      order.customerName.trim()
         ? order.customerName.trim()
         : "Customer";
 
@@ -124,12 +155,25 @@ export default async (request: Request): Promise<Response> => {
       "bot-field",
     ]);
 
-    const orderRows = Object.entries(order)
-      .filter(([key, value]) => {
-        if (ignoredFields.has(key)) return false;
-        if (value === undefined || value === null || value === "") return false;
+    const visibleOrderFields = Object.entries(order).filter(
+      ([key, value]) => {
+        if (ignoredFields.has(key)) {
+          return false;
+        }
+
+        if (
+          value === undefined ||
+          value === null ||
+          value === ""
+        ) {
+          return false;
+        }
+
         return true;
-      })
+      }
+    );
+
+    const orderRows = visibleOrderFields
       .map(([key, value]) => {
         const label = escapeHtml(makeReadableLabel(key));
         const displayedValue = escapeHtml(formatValue(value));
@@ -145,6 +189,7 @@ export default async (request: Request): Promise<Response> => {
             ">
               ${label}
             </td>
+
             <td style="
               padding: 10px;
               border: 1px solid #dddddd;
@@ -163,17 +208,36 @@ export default async (request: Request): Promise<Response> => {
       timeStyle: "short",
     });
 
-    const subject = `New ${orderType} Order from ${customerName}`;
+    const subject =
+      `New ${orderType} Order from ${customerName}`;
 
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
       auth: {
         user: gmailUser,
         pass: gmailAppPassword,
       },
     });
 
-    await transporter.sendMail({
+    console.log("Checking Gmail SMTP connection...");
+
+    try {
+      await transporter.verify();
+      console.log("Gmail SMTP connection verified.");
+    } catch (error) {
+      console.error("Gmail SMTP verification failed:", error);
+
+      return jsonResponse(500, {
+        success: false,
+        message:
+          "The order was received, but Gmail rejected the website's email credentials.",
+        errorCode: "GMAIL_AUTHENTICATION_FAILED",
+      });
+    }
+
+    const emailResult = await transporter.sendMail({
       from: `"Eggsistential Farms Website" <${gmailUser}>`,
       to: NOTIFICATION_EMAIL,
       replyTo:
@@ -181,25 +245,18 @@ export default async (request: Request): Promise<Response> => {
           ? customerEmail
           : undefined,
       subject,
+
       text: [
         `A new ${orderType} order was submitted.`,
         "",
-        ...Object.entries(order)
-          .filter(([key, value]) => {
-            if (ignoredFields.has(key)) return false;
-            if (value === undefined || value === null || value === "") {
-              return false;
-            }
-
-            return true;
-          })
-          .map(
-            ([key, value]) =>
-              `${makeReadableLabel(key)}: ${formatValue(value)}`
-          ),
+        ...visibleOrderFields.map(
+          ([key, value]) =>
+            `${makeReadableLabel(key)}: ${formatValue(value)}`
+        ),
         "",
         `Submitted: ${submittedAt}`,
       ].join("\n"),
+
       html: `
         <!doctype html>
         <html lang="en">
@@ -252,7 +309,7 @@ export default async (request: Request): Promise<Response> => {
                 customerEmail && isValidEmail(customerEmail)
                   ? `
                     <p style="font-size: 14px;">
-                      You can reply directly to this email to contact
+                      Reply directly to this email to contact
                       ${escapeHtml(customerName)}.
                     </p>
                   `
@@ -264,29 +321,40 @@ export default async (request: Request): Promise<Response> => {
       `,
     });
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Your order was submitted successfully.",
-      }),
-      {
-        status: 200,
-        headers,
-      }
-    );
-  } catch (error) {
-    console.error("Order email error:", error);
+    console.log("Email send completed.");
+    console.log("Message ID:", emailResult.messageId);
+    console.log("Accepted recipients:", emailResult.accepted);
+    console.log("Rejected recipients:", emailResult.rejected);
+    console.log("SMTP response:", emailResult.response);
 
-    return new Response(
-      JSON.stringify({
+    if (
+      !emailResult.accepted ||
+      emailResult.accepted.length === 0
+    ) {
+      console.error(
+        "Gmail did not accept the notification recipient."
+      );
+
+      return jsonResponse(500, {
         success: false,
         message:
-          "We could not submit your order. Please try again or contact Eggsistential Farms directly.",
-      }),
-      {
-        status: 500,
-        headers,
-      }
-    );
+          "The order was received, but the notification email was not accepted.",
+        errorCode: "EMAIL_NOT_ACCEPTED",
+      });
+    }
+
+    return jsonResponse(200, {
+      success: true,
+      message: "Your order was submitted successfully.",
+    });
+  } catch (error) {
+    console.error("Unexpected order email error:", error);
+
+    return jsonResponse(500, {
+      success: false,
+      message:
+        "We could not submit your order. Please try again or contact Eggsistential Farms directly.",
+      errorCode: "UNEXPECTED_EMAIL_ERROR",
+    });
   }
 };
