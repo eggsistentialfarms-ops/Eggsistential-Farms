@@ -408,8 +408,8 @@ export default function Bread() {
                     <AlertDescription className="text-muted-foreground">
                       We don't take payment online — once we confirm your order, we'll arrange Venmo
                       or cash payment with you directly at pickup. Questions in the meantime? Reach us at{" "}
-                      <a href="mailto:hello@eggsistentialfarms.com" className="text-accent underline font-medium">
-                        hello@eggsistentialfarms.com
+                      <a href="mailto:eggsistentialfarms@gmail.com" className="text-accent underline font-medium">
+                        eggsistentialfarms@gmail.com
                       </a>.
                     </AlertDescription>
                   </Alert>
