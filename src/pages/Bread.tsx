@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
-import { submitToNetlifyForm } from "@/lib/netlifyForm";
 import { useToast } from "@/hooks/use-toast";
 import { BREADS, PICKUP_LOCATIONS } from "@/data/bread";
 import { useSEO } from "@/lib/seo";
@@ -80,13 +79,62 @@ export default function Bread() {
   // arranged in person at pickup.
   const submitOrderMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      await submitToNetlifyForm("bread-order", { ...data });
+      const bread = BREADS.find((item) => item.label === data.breadType);
+      const estimatedTotal =
+        bread?.price != null ? bread.price * Number(data.quantity) : null;
+
+      const response = await fetch("/.netlify/functions/send-order-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderType: "Bread",
+          customerName: `${data.firstName} ${data.lastName}`.trim(),
+          customerEmail: data.email,
+          customerPhone: data.phone,
+          breadType: data.breadType,
+          quantity: data.quantity,
+          estimatedTotal:
+            estimatedTotal != null ? `$${estimatedTotal.toFixed(2)}` : "TBA",
+          preferredDate: data.preferredDate,
+          pickupLocation: data.pickupLocation,
+          notes: data.message,
+        }),
+      });
+
+      let result: {
+        success?: boolean;
+        message?: string;
+      };
+
+      try {
+        result = await response.json();
+      } catch {
+        throw new Error(
+          `The order service returned an invalid response (${response.status}).`
+        );
+      }
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message || "Unable to submit your bread pre-order."
+        );
+      }
+
+      return result;
     },
+
     onSuccess: () => {
       setStep("confirmed");
     },
+
     onError: (err: Error) => {
-      toast({ title: "Something went wrong", description: err.message, variant: "destructive" });
+      toast({
+        title: "Something went wrong",
+        description: err.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -349,7 +397,7 @@ export default function Bread() {
                       )} />
 
                       <Button type="submit" data-testid="button-bread-next" className="w-full h-13 text-lg rounded-xl bg-accent hover:bg-accent/90 text-white font-semibold shadow-lg shadow-accent/20">
-                        Review &amp; Pay <ArrowRight className="ml-2 w-5 h-5" />
+                        Review Order <ArrowRight className="ml-2 w-5 h-5" />
                       </Button>
                     </form>
                   </Form>
@@ -365,7 +413,7 @@ export default function Bread() {
                 <CardHeader>
                   <CardTitle className="font-serif text-3xl">Order Summary</CardTitle>
                   <CardDescription className="text-base">
-                    Double-check your order, then click Pay Now to complete your pre-order securely via Stripe.
+                    Double-check your order, then submit your pre-order. We will contact you to confirm availability and pickup details.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-8">
