@@ -3,6 +3,15 @@
   publish = "dist"
   functions = "netlify/functions"
 
+# Make sure forms.html (used to register the site's forms with
+# Netlify) is always served as-is, never swept into the catch-all
+# single-page-app rewrite below.
+[[redirects]]
+  from = "/forms.html"
+  to = "/forms.html"
+  status = 200
+  force = true
+
 # Since this is a single-page app, any URL that isn't a real file
 # (like /blog/some-post) should still load index.html so React Router
 # (wouter) can take over and show the right page.
