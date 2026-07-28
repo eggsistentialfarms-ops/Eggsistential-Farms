@@ -1,7 +1,4 @@
-
-
-
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -108,6 +105,9 @@ export default function Bread() {
   const [step, setStep] = useState<"form" | "summary" | "confirmed">("form");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orderData, setOrderData] = useState<FormData | null>(null);
+  const [addedLabel, setAddedLabel] = useState<string | null>(null);
+  const basketRef = useRef<HTMLDivElement | null>(null);
+  const formRef = useRef<HTMLDivElement | null>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -121,6 +121,36 @@ export default function Bread() {
       message: "",
     },
   });
+
+
+  useEffect(() => {
+    try {
+      const savedCart = window.localStorage.getItem("eggsistential-bread-preorder");
+      if (!savedCart) return;
+
+      const parsed = JSON.parse(savedCart) as CartItem[];
+      if (Array.isArray(parsed)) {
+        setCart(
+          parsed.filter(
+            (item) =>
+              typeof item?.label === "string" &&
+              typeof item?.price === "number" &&
+              typeof item?.quantity === "number" &&
+              item.quantity > 0,
+          ),
+        );
+      }
+    } catch {
+      window.localStorage.removeItem("eggsistential-bread-preorder");
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      "eggsistential-bread-preorder",
+      JSON.stringify(cart),
+    );
+  }, [cart]);
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce(
@@ -140,6 +170,11 @@ export default function Bread() {
       }
       return [...current, { label, price, quantity: 1 }];
     });
+
+    setAddedLabel(label);
+    window.setTimeout(() => {
+      setAddedLabel((current) => (current === label ? null : current));
+    }, 1200);
 
     toast({
       title: "Added to preorder",
@@ -241,6 +276,13 @@ export default function Bread() {
   const handleConfirmOrder = () => {
     if (!orderData || cart.length === 0) return;
     submitOrderMutation.mutate(orderData);
+  };
+
+  const scrollToBasket = () => {
+    (basketRef.current ?? formRef.current)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   };
 
   const resetOrder = () => {
@@ -376,8 +418,30 @@ export default function Bread() {
                         onClick={() => addToCart(bread.label, bread.price)}
                         className="w-full rounded-xl bg-accent hover:bg-accent/90 text-white"
                       >
-                        <Plus className="w-4 h-4 mr-2" />
-                        {inCart ? "Add Another" : "Add to Preorder"}
+                        <AnimatePresence mode="wait" initial={false}>
+                          {addedLabel === bread.label ? (
+                            <motion.span
+                              key="added"
+                              initial={{ opacity: 0, y: 6, scale: 0.95 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: -6, scale: 0.95 }}
+                              className="inline-flex items-center"
+                            >
+                              <CheckCircle className="w-4 h-4 mr-2" /> Added!
+                            </motion.span>
+                          ) : (
+                            <motion.span
+                              key="add"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              className="inline-flex items-center"
+                            >
+                              <Plus className="w-4 h-4 mr-2" />
+                              {inCart ? "Add Another" : "Add to Preorder"}
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
                       </Button>
                     ) : bread.price === null ? (
                       <a
@@ -409,6 +473,7 @@ export default function Bread() {
             </div>
           </div>
 
+          <div ref={basketRef} className="scroll-mt-24">
           <Card className="border-border/40 shadow-lg lg:sticky lg:top-24">
             <CardHeader className="pb-4">
               <CardTitle className="font-serif text-2xl flex items-center justify-between gap-3">
@@ -501,7 +566,7 @@ export default function Bread() {
               )}
 
               <div className="flex items-center justify-between border-t border-border pt-4">
-                <span className="font-medium">Estimated total</span>
+                <span className="font-medium">Estimated amount due at pickup</span>
                 <span className="font-serif text-2xl font-bold text-accent">
                   ${totalPrice.toFixed(2)}
                 </span>
@@ -522,6 +587,7 @@ export default function Bread() {
               </Button>
             </CardContent>
           </Card>
+          </div>
         </div>
 
         <div className="mb-16 grid md:grid-cols-2 gap-6">
@@ -957,6 +1023,34 @@ export default function Bread() {
           </p>
         </div>
       </div>
+
+      <AnimatePresence>
+        {cartCount > 0 && step === "form" && (
+          <motion.button
+            type="button"
+            onClick={scrollToBasket}
+            initial={{ opacity: 0, y: 24, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.96 }}
+            whileTap={{ scale: 0.98 }}
+            className="lg:hidden fixed z-50 left-4 right-4 bottom-4 rounded-2xl bg-accent text-white shadow-2xl px-5 py-4 flex items-center justify-between gap-4"
+            aria-label="View bread preorder basket"
+          >
+            <span className="flex items-center gap-3 font-semibold">
+              <span className="relative">
+                <ShoppingCart className="w-5 h-5" />
+                <span className="absolute -top-2.5 -right-2.5 min-w-5 h-5 px-1 rounded-full bg-white text-accent text-xs flex items-center justify-center">
+                  {cartCount}
+                </span>
+              </span>
+              View Preorder Basket
+            </span>
+            <span className="font-serif font-bold text-lg">
+              ${totalPrice.toFixed(2)}
+            </span>
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
