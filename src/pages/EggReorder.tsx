@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
-import { submitToNetlifyForm } from "@/lib/netlifyForm";
 import { useToast } from "@/hooks/use-toast";
 
 const eggOrderSchema = z.object({
@@ -15,6 +14,9 @@ const eggOrderSchema = z.object({
   pickupLocation: z.string().min(1, "Pickup location is required"),
   message: z.string().optional(),
 });
+
+type EggOrderFormValues = z.infer<typeof eggOrderSchema>;
+
 import {
   Form,
   FormControl,
@@ -33,9 +35,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Phone, Mail, User, Calendar, MapPin, MessageSquare, Info, CheckCircle, Clock, Truck } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Phone,
+  Mail,
+  User,
+  Calendar,
+  MapPin,
+  MessageSquare,
+  Info,
+  CheckCircle,
+  Clock,
+  Truck,
+} from "lucide-react";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
 import { PICKUP_LOCATIONS as pickupLocations } from "@/data/pickup";
 import { EGG_AVAILABILITY } from "@/data/availability";
 import { AvailabilityBadge } from "@/components/AvailabilityBadge";
@@ -63,11 +86,14 @@ const howItWorks = [
 export default function EggReorder() {
   useSEO({
     title: "Order Fresh Eggs",
-    description: "Order pasture-raised eggs from Eggsistential Farms — request a pickup near you.",
+    description:
+      "Order pasture-raised eggs from Eggsistential Farms — request a pickup near you.",
     path: "/eggs",
   });
+
   const { toast } = useToast();
-  const form = useForm({
+
+  const form = useForm<EggOrderFormValues>({
     resolver: zodResolver(eggOrderSchema),
     defaultValues: {
       firstName: "",
@@ -81,19 +107,62 @@ export default function EggReorder() {
   });
 
   const mutation = useMutation({
-    mutationFn: async (values: any) => {
-      await submitToNetlifyForm("egg-order", values);
+    mutationFn: async (values: EggOrderFormValues) => {
+      const response = await fetch(
+        "/.netlify/functions/send-order-email",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            orderType: "Egg",
+            customerName:
+              `${values.firstName} ${values.lastName}`.trim(),
+            customerEmail: values.email,
+            customerPhone: values.phone,
+            preferredDate: values.preferredDate,
+            pickupLocation: values.pickupLocation,
+            notes: values.message,
+          }),
+        }
+      );
+
+      let result: {
+        success?: boolean;
+        message?: string;
+      };
+
+      try {
+        result = await response.json();
+      } catch {
+        throw new Error(
+          `The order service returned an invalid response (${response.status}).`
+        );
+      }
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message || "Unable to submit your egg order."
+        );
+      }
+
+      return result;
     },
+
     onSuccess: () => {
       toast({
-        title: "Request Received!",
-        description: "We'll be in touch to confirm your order soon.",
+        title: "Order Submitted!",
+        description:
+          "Thanks! Your egg order has been sent to Eggsistential Farms.",
       });
+
       form.reset();
     },
+
     onError: (error: Error) => {
       toast({
-        title: "Uh oh — something went wrong.",
+        title: "Submission Failed",
         description: error.message,
         variant: "destructive",
       });
@@ -102,7 +171,6 @@ export default function EggReorder() {
 
   return (
     <div className="min-h-screen bg-background">
-
       {/* ─── HEADER ─── */}
       <section className="bg-primary/5 py-20 text-center">
         <motion.div
@@ -113,34 +181,49 @@ export default function EggReorder() {
           <h1 className="font-serif text-5xl md:text-6xl font-bold text-primary mb-5">
             Egg Re-order Hotline
           </h1>
+
           <p className="text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed mb-6">
-            Fresh, pasture-raised eggs from our very opinionated backyard hens. Available in a beautiful mix of brown, green, and pink.
+            Fresh, pasture-raised eggs from our very opinionated
+            backyard hens. Available in a beautiful mix of brown,
+            green, and pink.
           </p>
 
           <div className="flex flex-col items-center gap-2 mb-8">
             <AvailabilityBadge status={EGG_AVAILABILITY.status} />
+
             {EGG_AVAILABILITY.note && (
-              <p className="text-sm text-muted-foreground">{EGG_AVAILABILITY.note}</p>
+              <p className="text-sm text-muted-foreground">
+                {EGG_AVAILABILITY.note}
+              </p>
             )}
           </div>
 
-          <Alert variant="default" className="bg-accent/10 border-accent/30 max-w-md mx-auto text-left">
+          <Alert
+            variant="default"
+            className="bg-accent/10 border-accent/30 max-w-md mx-auto text-left"
+          >
             <Info className="h-4 w-4 text-accent mt-0.5" />
-            <AlertTitle className="text-accent font-bold text-base">Heads Up</AlertTitle>
+
+            <AlertTitle className="text-accent font-bold text-base">
+              Heads Up
+            </AlertTitle>
+
             <AlertDescription className="text-foreground/80 mt-1">
-              Our eggs come <strong>unwashed</strong> by default — that's how they preserve best. If you'd like them washed, just note it in your message.
+              Our eggs come <strong>unwashed</strong> by default —
+              that's how they preserve best. If you'd like them washed,
+              just note it in your message.
             </AlertDescription>
           </Alert>
         </motion.div>
       </section>
 
       <div className="container px-4 mx-auto max-w-4xl py-16">
-
         {/* ─── HOW IT WORKS ─── */}
         <div className="mb-16">
           <h2 className="font-serif text-3xl font-bold text-primary text-center mb-10">
             How It Works
           </h2>
+
           <div className="grid md:grid-cols-3 gap-6">
             {howItWorks.map((step, i) => (
               <motion.div
@@ -154,9 +237,18 @@ export default function EggReorder() {
                 <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
                   <step.icon className="w-7 h-7" />
                 </div>
-                <div className="text-accent font-bold text-sm uppercase tracking-widest mb-2">Step {i + 1}</div>
-                <h3 className="font-bold text-lg mb-2">{step.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{step.desc}</p>
+
+                <div className="text-accent font-bold text-sm uppercase tracking-widest mb-2">
+                  Step {i + 1}
+                </div>
+
+                <h3 className="font-bold text-lg mb-2">
+                  {step.title}
+                </h3>
+
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  {step.desc}
+                </p>
               </motion.div>
             ))}
           </div>
@@ -170,14 +262,25 @@ export default function EggReorder() {
         {/* ─── ORDER FORM ─── */}
         <Card className="border-border/40 shadow-xl bg-card">
           <CardHeader className="pb-2">
-            <CardTitle className="font-serif text-3xl">Place Your Order</CardTitle>
+            <CardTitle className="font-serif text-3xl">
+              Place Your Order
+            </CardTitle>
+
             <CardDescription className="text-base">
-              Fill out the form below and we'll get back to you to confirm the details. If we're temporarily out — and sometimes we are — we'll let you know right away.
+              Fill out the form below and we'll get back to you to
+              confirm the details. If we're temporarily out — and
+              sometimes we are — we'll let you know right away.
             </CardDescription>
           </CardHeader>
+
           <CardContent className="pt-6">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-6">
+              <form
+                onSubmit={form.handleSubmit((data) =>
+                  mutation.mutate(data)
+                )}
+                className="space-y-6"
+              >
                 <div className="grid md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -185,26 +288,41 @@ export default function EggReorder() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 font-medium">
-                          <User className="w-4 h-4 text-muted-foreground" /> First Name
+                          <User className="w-4 h-4 text-muted-foreground" />
+                          First Name
                         </FormLabel>
+
                         <FormControl>
-                          <Input data-testid="input-firstName" placeholder="Jane" {...field} />
+                          <Input
+                            data-testid="input-firstName"
+                            placeholder="Jane"
+                            {...field}
+                          />
                         </FormControl>
+
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     name="lastName"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 font-medium">
-                          <User className="w-4 h-4 text-muted-foreground" /> Last Name
+                          <User className="w-4 h-4 text-muted-foreground" />
+                          Last Name
                         </FormLabel>
+
                         <FormControl>
-                          <Input data-testid="input-lastName" placeholder="Smith" {...field} />
+                          <Input
+                            data-testid="input-lastName"
+                            placeholder="Smith"
+                            {...field}
+                          />
                         </FormControl>
+
                         <FormMessage />
                       </FormItem>
                     )}
@@ -218,26 +336,42 @@ export default function EggReorder() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 font-medium">
-                          <Mail className="w-4 h-4 text-muted-foreground" /> Email
+                          <Mail className="w-4 h-4 text-muted-foreground" />
+                          Email
                         </FormLabel>
+
                         <FormControl>
-                          <Input data-testid="input-email" type="email" placeholder="jane@example.com" {...field} />
+                          <Input
+                            data-testid="input-email"
+                            type="email"
+                            placeholder="jane@example.com"
+                            {...field}
+                          />
                         </FormControl>
+
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 font-medium">
-                          <Phone className="w-4 h-4 text-muted-foreground" /> Phone Number
+                          <Phone className="w-4 h-4 text-muted-foreground" />
+                          Phone Number
                         </FormLabel>
+
                         <FormControl>
-                          <Input data-testid="input-phone" placeholder="(601) 555-0000" {...field} />
+                          <Input
+                            data-testid="input-phone"
+                            placeholder="(601) 555-0000"
+                            {...field}
+                          />
                         </FormControl>
+
                         <FormMessage />
                       </FormItem>
                     )}
@@ -251,29 +385,43 @@ export default function EggReorder() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 font-medium">
-                          <Calendar className="w-4 h-4 text-muted-foreground" /> Preferred Pickup Date
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
+                          Preferred Pickup Date
                         </FormLabel>
+
                         <FormControl>
-                          <Input data-testid="input-preferredDate" type="date" {...field} />
+                          <Input
+                            data-testid="input-preferredDate"
+                            type="date"
+                            {...field}
+                          />
                         </FormControl>
+
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     name="pickupLocation"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 font-medium">
-                          <MapPin className="w-4 h-4 text-muted-foreground" /> Pickup Location
+                          <MapPin className="w-4 h-4 text-muted-foreground" />
+                          Pickup Location
                         </FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger data-testid="select-pickupLocation">
                               <SelectValue placeholder="Select a location" />
                             </SelectTrigger>
                           </FormControl>
+
                           <SelectContent>
                             {pickupLocations.map((loc) => (
                               <SelectItem key={loc} value={loc}>
@@ -282,6 +430,7 @@ export default function EggReorder() {
                             ))}
                           </SelectContent>
                         </Select>
+
                         <FormMessage />
                       </FormItem>
                     )}
@@ -294,8 +443,10 @@ export default function EggReorder() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="flex items-center gap-2 font-medium">
-                        <MessageSquare className="w-4 h-4 text-muted-foreground" /> Notes / Special Requests
+                        <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                        Notes / Special Requests
                       </FormLabel>
+
                       <FormControl>
                         <Textarea
                           data-testid="input-message"
@@ -304,6 +455,7 @@ export default function EggReorder() {
                           {...field}
                         />
                       </FormControl>
+
                       <FormMessage />
                     </FormItem>
                   )}
@@ -313,7 +465,10 @@ export default function EggReorder() {
                   type="submit"
                   data-testid="button-submit-egg-order"
                   className="w-full bg-accent hover:bg-accent/90 text-white h-13 text-lg rounded-xl font-semibold shadow-lg shadow-accent/20 disabled:opacity-50"
-                  disabled={mutation.isPending || EGG_AVAILABILITY.status === "sold-out"}
+                  disabled={
+                    mutation.isPending ||
+                    EGG_AVAILABILITY.status === "sold-out"
+                  }
                 >
                   {EGG_AVAILABILITY.status === "sold-out" ? (
                     "Currently Sold Out"
@@ -321,7 +476,8 @@ export default function EggReorder() {
                     "Submitting..."
                   ) : (
                     <>
-                      <CheckCircle className="w-5 h-5 mr-2" /> Submit Order Request
+                      <CheckCircle className="w-5 h-5 mr-2" />
+                      Submit Order Request
                     </>
                   )}
                 </Button>
@@ -334,27 +490,43 @@ export default function EggReorder() {
         <div className="grid md:grid-cols-2 gap-6 mt-12">
           <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6">
             <blockquote className="italic text-foreground/80 mb-4 leading-relaxed">
-              "These eggs changed my breakfast and possibly my outlook on life."
+              "These eggs changed my breakfast and possibly my outlook
+              on life."
             </blockquote>
-            <p className="font-bold text-sm text-primary">— definitely not Matt's mom</p>
+
+            <p className="font-bold text-sm text-primary">
+              — definitely not Matt's mom
+            </p>
           </div>
+
           <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6">
             <blockquote className="italic text-foreground/80 mb-4 leading-relaxed">
               "I didn't know pink was an option!"
             </blockquote>
-            <p className="font-bold text-sm text-primary">— Kelsey Walsh</p>
+
+            <p className="font-bold text-sm text-primary">
+              — Kelsey Walsh
+            </p>
           </div>
+
           <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6">
             <blockquote className="italic text-foreground/80 mb-4 leading-relaxed">
               "You should charge more."
             </blockquote>
-            <p className="font-bold text-sm text-primary">— Jack Moriarity</p>
+
+            <p className="font-bold text-sm text-primary">
+              — Jack Moriarity
+            </p>
           </div>
+
           <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6">
             <blockquote className="italic text-foreground/80 mb-4 leading-relaxed">
               "Oh, you're actually doing the egg thing."
             </blockquote>
-            <p className="font-bold text-sm text-primary">— Will Caves</p>
+
+            <p className="font-bold text-sm text-primary">
+              — Will Caves
+            </p>
           </div>
         </div>
       </div>
