@@ -38,7 +38,7 @@ export function Footer() {
               <Youtube className="h-4 w-4" />
             </a>
             <a
-              href="mailto:hello@eggsistentialfarms.com"
+              href="mailto:eggsistentialfarms@gmail.com"
               aria-label="Email"
               className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-accent transition-colors"
             >
@@ -81,11 +81,11 @@ export function Footer() {
             Have a question, farming fail to share, or just want to say hi? We're pretty easy to reach.
           </p>
           <a
-            href="mailto:hello@eggsistentialfarms.com"
+            href="mailto:eggsistentialfarms@gmail.com"
             className="inline-flex items-center gap-2 text-sm text-accent hover:text-accent/80 transition-colors font-medium"
           >
             <Mail className="h-4 w-4" />
-            hello@eggsistentialfarms.com
+            eggsistentialfarms@gmail.com
           </a>
         </div>
 
